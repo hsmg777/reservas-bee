@@ -10,7 +10,7 @@ class EventAccessService:
     @staticmethod
     def _frontend_base_url() -> str:
         # pon esto en tu .env (ej: https://reservasbee.com)
-        return os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:5173").rstrip("/")
+        return os.getenv("PUBLIC_BASE_URL", "https://beeconcertclub.com").rstrip("/")
 
     @classmethod
     def _access_url(cls, access_code: str) -> str:
