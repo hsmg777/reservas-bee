@@ -3,6 +3,7 @@ import type {
   ReservationDTO,
   ReservationCreatePayload,
   CheckinResponseDTO,
+  ReservationListDTO
 } from "../types/reservation";
 
 const RES_BASE = "/reservations";
@@ -39,5 +40,10 @@ export const ReservationsService = {
   checkin: (reservationCode: string) =>
     apiRequest<CheckinResponseDTO>(`${RES_BASE}/checkin/${reservationCode}`, {
       method: "POST",
+    }),
+
+  listByEvent: (eventId: number) =>
+    apiRequest<ReservationListDTO>(`${RES_BASE}/event/${eventId}`, {
+      method: "GET",
     }),
 };

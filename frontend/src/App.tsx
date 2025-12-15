@@ -19,6 +19,9 @@ import SecurityScanPage from "./pages/security/SecurityScanPage";
 import RequireAdmin from "./routes/RequireAdmin";
 import RequireRole from "./routes/RequireRole";
 
+import AdminReservasPage from "./pages/admin/AdminReservasPage";
+
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -42,6 +45,7 @@ export default function App() {
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/eventos" element={<AdminEventosPage />} />
           <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
+           <Route path="/admin/reservas" element={<AdminReservasPage />} /> 
         </Route>
 
         {/* SEGURIDAD (admin también puede entrar) */}

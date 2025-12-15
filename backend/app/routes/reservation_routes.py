@@ -8,6 +8,7 @@ from ..schemas.reservation_schemas import (
     ReservationCreateSchema,
     ReservationSchema,
     CheckinResponseSchema,
+    ReservationListSchema,
 )
 from ..services.reservation_service import ReservationService
 from ..extensions import db
@@ -82,3 +83,23 @@ class ReservationCheckinView(MethodView):
                 "used_at": r.used_at if r.used_at else None,
             } if r else None,
         }
+
+@reservation_blp.route("/event/<int:event_id>")
+class ReservationsByEventView(MethodView):
+    @reservation_blp.doc(security=[{"bearerAuth": []}])
+    @jwt_required()
+    @roles_required("seguridad", "admin")
+    @reservation_blp.response(200, ReservationListSchema)
+    def get(self, event_id: int):
+        try:
+            items = ReservationService.list_by_event(event_id)
+            return {
+                "total": len(items),
+                "items": [ReservationService.serialize(r) for r in items],
+            }
+        except ValueError as e:
+            if str(e) == "EVENT_NOT_FOUND":
+                abort(404, message="EVENT_NOT_FOUND")
+            abort(400, message=str(e))
+        except Exception:
+            abort(500, message="SERVER_ERROR")

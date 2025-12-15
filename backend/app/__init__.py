@@ -6,6 +6,8 @@ from .extensions import db, migrate, jwt, api
 from .routes.auth_routes import auth_blp
 from .routes.event_routes import event_blp
 from .routes.reservation_routes import reservation_blp
+from app.commands.seed_admin import seed_admin_command
+
 
 
 def create_app():
@@ -37,6 +39,9 @@ def create_app():
     api.register_blueprint(auth_blp)
     api.register_blueprint(event_blp)
     api.register_blueprint(reservation_blp)
+
+    app.cli.add_command(seed_admin_command)
+
 
 
     @app.get("/health")

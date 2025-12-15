@@ -286,6 +286,19 @@ class ReservationService:
         return ReservationService._qr_png_bytes(checkin_url)
 
     @staticmethod
+    def list_by_event(event_id: int) -> list[Reservation]:
+        ev = db.session.get(Event, event_id)
+        if not ev:
+            raise ValueError("EVENT_NOT_FOUND")
+
+        return (
+            Reservation.query
+            .filter_by(event_id=event_id)
+            .order_by(Reservation.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
     def checkin_atomic(
         reservation_code: str, scanned_by_user_id: int | None
     ) -> tuple[bool, Reservation | None, str]:

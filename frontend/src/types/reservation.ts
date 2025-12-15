@@ -8,6 +8,7 @@ export type ReservationCreatePayload = {
   instagram?: string | null;
 };
 
+
 export type ReservationDTO = {
   id: number;
   event_id: number;
@@ -35,8 +36,10 @@ export type ReservationDTO = {
 };
 
 export type ReservationListDTO = {
+  total: number;
   items: ReservationDTO[];
 };
+
 
 // ✅ lo que devuelve /reservations/checkin/:code
 export type CheckinReservationDTO = {

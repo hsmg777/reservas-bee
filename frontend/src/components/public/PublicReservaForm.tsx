@@ -33,6 +33,13 @@ export default function PublicReservaForm({
         phone: phone.trim(),
         instagram: instagram.trim() ? instagram.trim() : null,
       });
+
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPhone("");
+      setInstagram("");
+      
     } finally {
       setSubmitting(false);
     }
@@ -47,6 +54,7 @@ export default function PublicReservaForm({
           disabled={disabled || submitting}
           className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-300/40 focus:ring-2 focus:ring-yellow-300/20 disabled:opacity-60"
           placeholder="Tu nombre"
+          required
         />
       </Field>
 
@@ -57,6 +65,7 @@ export default function PublicReservaForm({
           disabled={disabled || submitting}
           className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-300/40 focus:ring-2 focus:ring-yellow-300/20 disabled:opacity-60"
           placeholder="Tu apellido"
+          required
         />
       </Field>
 
@@ -67,6 +76,7 @@ export default function PublicReservaForm({
           disabled={disabled || submitting}
           className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-300/40 focus:ring-2 focus:ring-yellow-300/20 disabled:opacity-60"
           placeholder="tucorreo@gmail.com"
+          required
         />
       </Field>
 
@@ -77,16 +87,18 @@ export default function PublicReservaForm({
           disabled={disabled || submitting}
           className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-300/40 focus:ring-2 focus:ring-yellow-300/20 disabled:opacity-60"
           placeholder="0999999999"
+          required
         />
       </Field>
 
-      <Field label="Instagram (opcional)">
+      <Field label="Instagram">
         <input
           value={instagram}
           onChange={(e) => setInstagram(e.target.value)}
           disabled={disabled || submitting}
           className="mt-1 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-300/40 focus:ring-2 focus:ring-yellow-300/20 disabled:opacity-60"
           placeholder="@tu_usuario"
+          required
         />
       </Field>
 

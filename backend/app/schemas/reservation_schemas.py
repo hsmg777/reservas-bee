@@ -50,3 +50,8 @@ class CheckinResponseSchema(Schema):
     reservation_id = fields.Int(allow_none=True)
     used_at = fields.DateTime(allow_none=True)
     reservation = fields.Nested(CheckinReservationMiniSchema, allow_none=True) 
+
+
+class ReservationListSchema(Schema):
+    total = fields.Int(required=True)
+    items = fields.List(fields.Nested(ReservationSchema), required=True)
