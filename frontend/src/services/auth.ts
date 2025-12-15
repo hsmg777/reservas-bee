@@ -1,5 +1,13 @@
 import { apiRequest } from "./api";
-import type { LoginRequest, LoginResponse, MeResponse } from "../types/auth";
+import type {
+  LoginRequest,
+  LoginResponse,
+  MeResponse,
+  RegisterRequest,
+  RegisterResponse,
+  UsersListResponse,
+  DeleteUserResponse,
+} from "../types/auth";
 
 const AUTH_PREFIX = "/auth";
 
@@ -8,6 +16,7 @@ export const authService = {
     const data = await apiRequest<LoginResponse>(`${AUTH_PREFIX}/login`, {
       method: "POST",
       body: payload,
+      token: null, // ✅ evita mandar Bearer viejo
     });
 
     localStorage.setItem("access_token", data.access_token);
@@ -16,8 +25,25 @@ export const authService = {
     return data;
   },
 
+  async register(payload: RegisterRequest) {
+    return apiRequest<RegisterResponse>(`${AUTH_PREFIX}/register`, {
+      method: "POST",
+      body: payload,
+    });
+  },
+
   async me() {
     return apiRequest<MeResponse>(`${AUTH_PREFIX}/me`, { method: "GET" });
+  },
+
+  async listUsers() {
+    return apiRequest<UsersListResponse>(`${AUTH_PREFIX}/users`, { method: "GET" });
+  },
+
+  async deleteUser(userId: number) {
+    return apiRequest<DeleteUserResponse>(`${AUTH_PREFIX}/users/${userId}`, {
+      method: "DELETE",
+    });
   },
 
   logout() {

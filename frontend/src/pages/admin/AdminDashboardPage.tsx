@@ -1,12 +1,35 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import {
   CalendarPlus,
   Ticket,
   HelpCircle,
   LayoutDashboard,
+  Users,
+  LogOut,
 } from "lucide-react";
 
+import { authService } from "../../services/auth"; 
+
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    const res = await Swal.fire({
+      title: "Cerrar sesión",
+      text: "¿Seguro que deseas salir del panel?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, salir",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!res.isConfirmed) return;
+
+    authService.logout();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Soft background glow */}
@@ -31,8 +54,19 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="hidden sm:block text-xs font-semibold text-slate-500">
-              Accesos rápidos
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:block text-xs font-semibold text-slate-500">
+                Accesos rápidos
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                title="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4" />
+                Salir
+              </button>
             </div>
           </div>
         </header>
@@ -62,6 +96,13 @@ export default function AdminDashboardPage() {
               title="Reservas"
               desc="Revisar y gestionar reservas."
               icon={<Ticket className="h-5 w-5" />}
+            />
+
+            <ActionCard
+              to="/admin/usuarios"
+              title="Usuarios"
+              desc="Crear usuarios y asignar roles."
+              icon={<Users className="h-5 w-5" />}
             />
 
             <ActionCard

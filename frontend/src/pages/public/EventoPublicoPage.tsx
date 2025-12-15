@@ -6,6 +6,10 @@ import type { EventDTO } from "../../types/event";
 import { EventsService } from "../../services/events.service";
 import PublicReservaForm from "../../components/public/PublicReservaForm";
 
+import type { ReservationCreatePayload } from "../../types/reservation";
+import { ReservationsService } from "../../services/reservations.service";
+import { qrBlobToObjectUrl, revokeObjectUrl } from "../../utils/qr";
+
 export default function EventoPublicoPage() {
   const { publicCode } = useParams<{ publicCode: string }>();
 
@@ -33,6 +37,41 @@ export default function EventoPublicoPage() {
 
     run();
   }, [publicCode]);
+
+  async function handleCreateReservation(payload: ReservationCreatePayload) {
+    if (!publicCode) return;
+
+    try {
+      // 1) crear reserva
+      const reservation = await ReservationsService.createPublic(publicCode, payload);
+
+      // 2) pedir QR (PNG)
+      const blob = await ReservationsService.getQrBlob(reservation.id);
+      const url = qrBlobToObjectUrl(blob);
+
+      // 3) mostrar QR
+      await Swal.fire({
+        title: "Reserva creada ✅",
+        html: `
+          <p style="margin:0 0 10px 0;opacity:.85">
+            Te enviamos tu QR al correo. También lo tienes aquí:
+          </p>
+          <div style="display:flex;justify-content:center;">
+            <img alt="QR" src="${url}"
+              style="width:260px;height:260px;border-radius:16px;border:1px solid #2a2a2a;background:#fff;padding:10px;" />
+          </div>
+          <p style="margin:10px 0 0 0;font-size:12px;opacity:.7">
+            Código: <span style="font-family:monospace;">${reservation.reservation_code}</span>
+          </p>
+        `,
+        showCloseButton: true,
+        confirmButtonText: "Cerrar",
+        didClose: () => revokeObjectUrl(url),
+      });
+    } catch (e: any) {
+      Swal.fire("Error", e?.message ?? "No se pudo crear la reserva", "error");
+    }
+  }
 
   return (
     <section className="bg-black text-white py-6">
@@ -95,15 +134,13 @@ export default function EventoPublicoPage() {
               </h2>
 
               <p className="mt-3 text-sm text-white/70 leading-relaxed">
-                (Por ahora es solo visual. Luego lo conectamos con reservas.)
+                Completa tus datos para generar tu reserva y obtener tu QR.
               </p>
 
               <div className="mt-6">
                 <PublicReservaForm
                   disabled={loading || !event}
-                  onSubmit={() =>
-                    Swal.fire("Listo", "Luego conectamos este formulario 😉", "info")
-                  }
+                  onSubmit={handleCreateReservation}
                 />
               </div>
             </Card>
@@ -131,13 +168,4 @@ function Card({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
 }

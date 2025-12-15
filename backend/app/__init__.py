@@ -5,6 +5,7 @@ from .config import Config
 from .extensions import db, migrate, jwt, api
 from .routes.auth_routes import auth_blp
 from .routes.event_routes import event_blp
+from .routes.reservation_routes import reservation_blp
 
 
 def create_app():
@@ -35,6 +36,7 @@ def create_app():
     api.init_app(app)
     api.register_blueprint(auth_blp)
     api.register_blueprint(event_blp)
+    api.register_blueprint(reservation_blp)
 
 
     @app.get("/health")

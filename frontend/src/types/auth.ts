@@ -1,12 +1,15 @@
 export type UserRole = "admin" | "user" | "seguridad";
 
+
 export interface UserDTO {
   id: number;
-  name?: string;
+  name: string;
   email: string;
   role: UserRole;
-  is_active?: boolean;
+  is_active: boolean;
+  created_at?: string;
 }
+
 
 export interface LoginRequest {
   email: string;
@@ -24,3 +27,24 @@ export interface LoginResponse {
 export interface MeResponse {
   user: UserDTO;
 }
+
+export type RegisterRequest = {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+};
+
+export type RegisterResponse = {
+  message: string;
+  user: UserDTO;
+};
+
+
+export type UsersListResponse = {
+  items: UserDTO[];
+};
+
+export type DeleteUserResponse = {
+  message: "DELETED";
+};

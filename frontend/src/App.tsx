@@ -1,16 +1,23 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import PublicLayout from "./components/public/PublicLayout";
+
 import HomePage from "./pages/public/HomePage";
 import NosotrosPage from "./pages/public/NosotrosPage";
 import EventosPage from "./pages/public/EventosPage";
 import ConciertosPage from "./pages/public/ConciertosPage";
 import PoliticasPage from "./pages/public/PoliticasPage";
+import EventoPublicoPage from "./pages/public/EventoPublicoPage";
+
 import LoginPage from "./pages/admin/LoginPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminEventosPage from "./pages/admin/AdminEventosPage";
+import AdminUsuariosPage from "./pages/admin/AdminUsuariosPage";
+
+import SecurityScanPage from "./pages/security/SecurityScanPage";
+
 import RequireAdmin from "./routes/RequireAdmin";
-import EventoPublicoPage from "./pages/public/EventoPublicoPage";
+import RequireRole from "./routes/RequireRole";
 
 export default function App() {
   return (
@@ -26,14 +33,21 @@ export default function App() {
           <Route path="/politicas" element={<PoliticasPage />} />
           <Route path="/evento/:publicCode" element={<EventoPublicoPage />} />
         </Route>
+
+        {/* AUTH */}
         <Route path="/admin/login" element={<LoginPage />} />
 
-        {/* ADMIN (luego lo hacemos) */}
+        {/* ADMIN ONLY */}
         <Route element={<RequireAdmin />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/eventos" element={<AdminEventosPage />} />
+          <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
         </Route>
-        
+
+        {/* SEGURIDAD (admin también puede entrar) */}
+        <Route element={<RequireRole roles={["seguridad"]} />}>
+          <Route path="/seguridad" element={<SecurityScanPage />} />
+        </Route>
 
         {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

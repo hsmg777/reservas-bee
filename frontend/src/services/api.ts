@@ -17,7 +17,6 @@ export class ApiError extends Error {
 
 function buildUrl(path: string) {
   if (!path.startsWith("/")) path = `/${path}`;
-  // Ej: BASE_URL="/api" + "/auth/login" => "/api/auth/login"
   return `${BASE_URL}${path}`;
 }
 
@@ -33,18 +32,20 @@ export async function apiRequest<T>(
     token?: string | null;
     headers?: Record<string, string>;
     signal?: AbortSignal;
+    auth?: boolean; // ✅ NUEVO
   } = {}
 ): Promise<T> {
   const method = options.method ?? "GET";
   const url = buildUrl(path);
 
-  const token = options.token ?? getToken();
+  const useAuth = options.auth !== false;
+  const token = useAuth ? (options.token ?? getToken()) : null;
 
   const headers: Record<string, string> = {
+    Accept: "application/json",
     ...(options.headers ?? {}),
   };
 
-  // JSON por defecto
   if (options.body !== undefined && !(options.body instanceof FormData)) {
     headers["Content-Type"] = headers["Content-Type"] ?? "application/json";
   }
@@ -68,7 +69,9 @@ export async function apiRequest<T>(
   const contentType = res.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
 
-  const data = isJson ? await res.json().catch(() => null) : await res.text().catch(() => null);
+  const data = isJson
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => null);
 
   if (!res.ok) {
     const msg =
