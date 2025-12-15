@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from .config import Config
 from .extensions import db, migrate, jwt, api
 from .routes.auth_routes import auth_blp
+from .routes.event_routes import event_blp
+
 
 def create_app():
     load_dotenv()
@@ -32,6 +34,8 @@ def create_app():
 
     api.init_app(app)
     api.register_blueprint(auth_blp)
+    api.register_blueprint(event_blp)
+
 
     @app.get("/health")
     def health():

@@ -12,4 +12,6 @@ class LoginSchema(Schema):
 class TokenSchema(Schema):
     access_token = fields.String(required=True)
     refresh_token = fields.String(required=True)
+    token_type = fields.String(required=True)
+    expires_in = fields.Integer(required=False)
     user = fields.Dict(required=True)

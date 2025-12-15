@@ -7,6 +7,7 @@ from ..models import User
 from ..extensions import db
 from sqlalchemy.exc import IntegrityError
 from flask import current_app
+import os
 
 
 auth_blp = Blueprint(
@@ -45,7 +46,14 @@ class LoginView(MethodView):
     def post(self, data):
         try:
             access, refresh, u = AuthService.login(data["email"], data["password"])
-            return {"access_token": access, "refresh_token": refresh, "user": u.to_dict()}
+            access_min = int(os.getenv("JWT_ACCESS_MIN", "60"))
+            return {
+                "access_token": access,
+                "refresh_token": refresh,
+                "token_type": "bearer",
+                "expires_in": access_min * 60,
+                "user": u.to_dict(),
+            }
         except ValueError:
             abort(401, message="INVALID_CREDENTIALS")
 

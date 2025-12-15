@@ -44,8 +44,10 @@ services:
     build:
       context: ./frontend
     container_name: reservas-frontend
+    env_file:
+      - .env
     environment:
-      VITE_API_BASE: /api
+      VITE_API_URL: ${VITE_API_URL}
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     volumes:
@@ -56,6 +58,7 @@ services:
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
     networks:
       - reservas-net
+
 
 
   nginx:

@@ -12,3 +12,6 @@ marshmallow==3.21.3
 python-dotenv==1.0.1
 
 flask-smorest==0.44.0
+
+qrcode[pil]==7.4.2
+Pillow==10.4.0

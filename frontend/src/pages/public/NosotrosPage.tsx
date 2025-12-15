@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 
 export default function NosotrosPage() {
   return (
-    <section className="relative bg-black text-white">
+    <section className="bg-black text-white py-6">
       {/* Background glow */}
       <div className="pointer-events-none absolute -top-24 left-10 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
       <div className="pointer-events-none absolute top-24 right-10 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
