@@ -7,6 +7,8 @@ from .routes.auth_routes import auth_blp
 from .routes.event_routes import event_blp
 from .routes.reservation_routes import reservation_blp
 from app.commands.seed_admin import seed_admin_command
+from .routes.event_access_routes import event_access_blp, access_check_blp
+
 
 
 
@@ -39,6 +41,8 @@ def create_app():
     api.register_blueprint(auth_blp)
     api.register_blueprint(event_blp)
     api.register_blueprint(reservation_blp)
+    api.register_blueprint(event_access_blp)
+    api.register_blueprint(access_check_blp)
 
     app.cli.add_command(seed_admin_command)
 

@@ -13,6 +13,9 @@ import {
 import type { EventDTO, EventCreatePayload, EventUpdatePayload } from "../../types/event";
 import { EventsService } from "../../services/events.service";
 import { qrBlobToObjectUrl, revokeObjectUrl } from "../../utils/qr";
+import { EventAccessService } from "../../services/event-access.service";
+import type { EventAccessCodeDTO } from "../../types/event-access";
+
 
 type Mode = "create" | "edit";
 
@@ -187,6 +190,7 @@ export default function AdminEventosPage() {
 
                       <div className="flex items-center gap-2 shrink-0">
                         <QrButton eventId={ev.id} />
+                        <AccessQrButton eventId={ev.id} />
 
                         <button
                           onClick={() => openEdit(ev)}
@@ -297,6 +301,102 @@ function QrButton({ eventId }: { eventId: number }) {
     </button>
   );
 }
+
+function AccessQrButton({ eventId }: { eventId: number }) {
+  const [busy, setBusy] = useState(false);
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => revokeObjectUrl(imgUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function openAccessQr() {
+    setBusy(true);
+
+    try {
+      // 1) Reusar el último access-code si existe; si no, crear uno
+      const list = await EventAccessService.listByEvent(eventId);
+      const access: EventAccessCodeDTO =
+        list.items?.[0] ??
+        (await EventAccessService.create(eventId, { label: "Acceso ilimitado" }));
+
+      // 2) Descargar PNG del QR
+      const blob = await EventAccessService.getQrBlob(eventId, access.id);
+      const url = qrBlobToObjectUrl(blob);
+
+      revokeObjectUrl(imgUrl);
+      setImgUrl(url);
+
+      // 👇 guardamos el string en una variable simple para que el listener no dependa del objeto
+      const accessUrlToCopy = access.access_url;
+
+      await Swal.fire({
+        title: "QR acceso ilimitado",
+        html: `
+          <div style="display:grid;gap:12px;justify-items:center;">
+            <img alt="QR" src="${url}"
+              style="width:260px;height:260px;border-radius:16px;border:1px solid #e2e8f0;"/>
+            <div style="width:100%;text-align:left;font-size:12px;color:#334155;">
+              <div><b>label:</b> ${access.label ?? "—"}</div>
+              <div><b>code:</b> <span style="font-family:ui-monospace, SFMono-Regular, Menlo, monospace;">${access.access_code}</span></div>
+              <div style="margin-top:6px;"><b>url:</b></div>
+              <div style="word-break:break-all;color:#0f172a;">${accessUrlToCopy}</div>
+              <button id="copy-access-url"
+                style="margin-top:10px;padding:8px 10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;font-weight:700;cursor:pointer;">
+                Copiar link
+              </button>
+            </div>
+          </div>
+        `,
+        showCloseButton: true,
+        confirmButtonText: "Cerrar",
+        didOpen: () => {
+          const btn = document.getElementById("copy-access-url");
+          if (!btn) return;
+
+          const handler = async () => {
+            try {
+              await navigator.clipboard.writeText(accessUrlToCopy);
+              Swal.showValidationMessage("✅ Link copiado");
+              setTimeout(() => Swal.resetValidationMessage(), 900);
+            } catch {
+              Swal.showValidationMessage("No se pudo copiar automáticamente 😅");
+              setTimeout(() => Swal.resetValidationMessage(), 900);
+            }
+          };
+
+          btn.addEventListener("click", handler);
+
+          // cleanup cuando cierra el modal
+          Swal.getPopup()?.addEventListener(
+            "remove",
+            () => btn.removeEventListener("click", handler),
+            { once: true }
+          );
+        },
+      });
+    } catch (e: any) {
+      Swal.fire("Error", e?.message ?? "No se pudo generar el QR ilimitado", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={openAccessQr}
+      disabled={busy}
+      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
+      title="QR ilimitado (acceso)"
+    >
+      <QrCode className="h-4 w-4" />
+      {busy ? "Acceso..." : "QR Acceso"}
+    </button>
+  );
+}
+
+
 
 /* ----------------- Modal ----------------- */
 

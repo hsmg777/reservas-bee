@@ -3,7 +3,8 @@ import Swal from "sweetalert2";
 import { NavLink } from "react-router-dom";
 import { ShieldCheck, RefreshCcw, LogOut } from "lucide-react";
 import QrScanner from "qr-scanner";
-
+import { EventAccessService } from "../../services/event-access.service";
+import type { AccessCheckResponseDTO } from "../../types/event-access";
 import { useAuth } from "../../context/AuthContext";
 import { ReservationsService } from "../../services/reservations.service";
 import type { CheckinResponseDTO } from "../../types/reservation";
@@ -30,24 +31,46 @@ export default function SecurityScanPage() {
 
   const displayName = useMemo(() => user?.name?.trim() || "Seguridad", [user]);
 
-  function parseReservationCode(raw: string): string | null {
+  type ScanTarget =
+  | { kind: "reservation"; code: string }
+  | { kind: "access"; code: string };
+
+  function parseScannedTarget(raw: string): ScanTarget | null {
     const s = (raw || "").trim();
     if (!s) return null;
 
     if (s.startsWith("http://") || s.startsWith("https://")) {
       try {
         const url = new URL(s);
-        const parts = url.pathname.split("/").filter(Boolean);
-        const idx = parts.findIndex((p) => p.toLowerCase() === "checkin");
-        if (idx >= 0 && parts[idx + 1]) return parts[idx + 1];
-        return parts[parts.length - 1] || null;
+        const parts = url.pathname.split("/").filter(Boolean).map(p => p.toLowerCase());
+
+        const idxAccess = parts.findIndex((p) => p === "access");
+        if (idxAccess >= 0 && parts[idxAccess + 1]) {
+          const rawParts = url.pathname.split("/").filter(Boolean);
+          return { kind: "access", code: rawParts[idxAccess + 1] };
+        }
+
+        // ✅ RESERVA: /checkin/:reservation_code
+        const idxCheckin = parts.findIndex((p) => p === "checkin");
+        if (idxCheckin >= 0 && parts[idxCheckin + 1]) {
+          const rawParts = url.pathname.split("/").filter(Boolean);
+          return { kind: "reservation", code: rawParts[idxCheckin + 1] };
+        }
+
+        const rawParts = url.pathname.split("/").filter(Boolean);
+        const last = rawParts[rawParts.length - 1];
+        if (!last) return null;
+
+        return { kind: "reservation", code: last };
       } catch {
         return null;
       }
     }
 
-    return s;
+    // Si solo viene texto (sin URL): asumimos reserva
+    return { kind: "reservation", code: s };
   }
+
 
   async function stopScanner() {
     if (!scannerRef.current) return;
@@ -99,8 +122,11 @@ export default function SecurityScanPage() {
   }
 
   async function handleCode(raw: string) {
-    const code = parseReservationCode(raw);
-    if (!code) return;
+    const target = parseScannedTarget(raw);
+    if (!target) return;
+
+    const code = target.code;
+
 
     const now = Date.now();
 
@@ -125,22 +151,70 @@ export default function SecurityScanPage() {
     await stopScanner();
 
     try {
-      const res = (await ReservationsService.checkin(code)) as CheckinResponseDTO;
+      if (target.kind === "reservation") {
+        const res = (await ReservationsService.checkin(code)) as CheckinResponseDTO;
+
+        if (res.ok) {
+          const r = res.reservation;
+          const fullName = r ? `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() : "—";
+
+          await Swal.fire({
+            icon: "success",
+            title: "✅ Aprobado",
+            html: `
+              <div style="text-align:left">
+                <div><b>Persona:</b> ${escapeHtml(fullName)}</div>
+                <div><b>Código:</b> <span style="font-family:monospace">${escapeHtml(code)}</span></div>
+                <div><b>Mensaje:</b> ${escapeHtml(res.message || "OK")}</div>
+              </div>
+            `,
+            confirmButtonText: "Listo",
+            allowOutsideClick: false,
+          });
+        } else {
+          const msg = res.message || "REJECTED";
+          const title =
+            msg === "ALREADY_USED"
+              ? "⚠️ Ya usado"
+              : msg === "NOT_FOUND"
+              ? "❌ No encontrado"
+              : "❌ Rechazado";
+
+          const icon = msg === "ALREADY_USED" ? "warning" : "error";
+
+          await Swal.fire({
+            icon,
+            title,
+            html: `
+              <div style="text-align:left">
+                <div><b>Código:</b> <span style="font-family:monospace">${escapeHtml(code)}</span></div>
+                <div style="margin-top:6px;color:#666">${escapeHtml(msg)}</div>
+              </div>
+            `,
+            confirmButtonText: "Entendido",
+            allowOutsideClick: false,
+          });
+        }
+
+        return; // ✅ importante: no continúa al bloque access
+      }
+
+      // ✅ QR ILIMITADO (ACCESS)
+      const res = (await EventAccessService.check(code)) as AccessCheckResponseDTO;
 
       if (res.ok) {
-        const r = res.reservation;
-        const fullName = r
-          ? `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim()
-          : "—";
+        const ev = res.event;
+        const acc = res.access;
 
         await Swal.fire({
           icon: "success",
-          title: "✅ Aprobado",
+          title: "✅ Bienvenido",
           html: `
             <div style="text-align:left">
-              <div><b>Persona:</b> ${escapeHtml(fullName)}</div>
+              <div><b>Evento:</b> ${escapeHtml(ev?.name ?? "—")}</div>
+              <div><b>Estado:</b> ${escapeHtml(ev?.status ?? "—")}</div>
+              <div><b>Accesos:</b> ${escapeHtml(String(acc?.scan_count ?? 0))}</div>
               <div><b>Código:</b> <span style="font-family:monospace">${escapeHtml(code)}</span></div>
-              <div><b>Mensaje:</b> ${escapeHtml(res.message || "OK")}</div>
             </div>
           `,
           confirmButtonText: "Listo",
@@ -149,21 +223,26 @@ export default function SecurityScanPage() {
       } else {
         const msg = res.message || "REJECTED";
         const title =
-          msg === "ALREADY_USED"
-            ? "⚠️ Ya usado"
+          msg === "EVENT_NOT_ACTIVE"
+            ? "⛔ Evento no activo"
+            : msg === "CODE_DISABLED"
+            ? "⛔ QR deshabilitado"
             : msg === "NOT_FOUND"
             ? "❌ No encontrado"
             : "❌ Rechazado";
 
-        const icon = msg === "ALREADY_USED" ? "warning" : "error";
-
         await Swal.fire({
-          icon,
+          icon: "error",
           title,
           html: `
             <div style="text-align:left">
               <div><b>Código:</b> <span style="font-family:monospace">${escapeHtml(code)}</span></div>
               <div style="margin-top:6px;color:#666">${escapeHtml(msg)}</div>
+              ${
+                res.event?.name
+                  ? `<div style="margin-top:10px"><b>Evento:</b> ${escapeHtml(res.event.name)}</div>`
+                  : ""
+              }
             </div>
           `,
           confirmButtonText: "Entendido",
@@ -172,6 +251,7 @@ export default function SecurityScanPage() {
       }
     } catch (e: any) {
       await Swal.fire("Error", e?.message ?? "No se pudo validar el QR", "error");
+
     } finally {
       setBusy(false);
 
