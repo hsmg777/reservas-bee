@@ -28,7 +28,7 @@ export default function Hero() {
         {/* Bottom CTA centered */}
         <div className="pb-10 sm:pb-12 flex items-center justify-center">
             <button
-                onClick={() => navigate("/conciertos")}
+                onClick={() => navigate("/eventos")}
                 className="
                     group inline-flex items-center justify-center gap-3
                     rounded-2xl px-10 py-4
