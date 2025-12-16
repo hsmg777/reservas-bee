@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   LogOut,
+  QrCode
 } from "lucide-react";
 
 import { authService } from "../../services/auth"; 
@@ -99,6 +100,14 @@ export default function AdminDashboardPage() {
             />
 
             <ActionCard
+              to="/admin/accesos"
+              title="Accesos"
+              desc="Ver cuántas veces se escaneó el QR ilimitado."
+              icon={<QrCode className="h-5 w-5" />}
+            />
+
+
+            <ActionCard
               to="/admin/usuarios"
               title="Usuarios"
               desc="Crear usuarios y asignar roles."
@@ -106,11 +115,12 @@ export default function AdminDashboardPage() {
             />
 
             <ActionCard
-              to="/admin/ayuda"
+              to="https://wa.me/593994993430"
               title="Ayuda"
-              desc="Guía rápida y soporte."
+              desc="Contáctanos por WhatsApp, te ayudaremos."
               icon={<HelpCircle className="h-5 w-5" />}
             />
+
           </div>
 
           {/* Small footer note */}
@@ -136,21 +146,22 @@ function ActionCard({
   desc: string;
   icon: React.ReactNode;
 }) {
-  return (
-    <NavLink
-      to={to}
-      className="
-        group rounded-[1.6rem]
-        border border-slate-200
-        bg-white/80 backdrop-blur-xl
-        p-6
-        shadow-[0_14px_35px_rgba(2,6,23,0.08)]
-        hover:shadow-[0_18px_50px_rgba(2,6,23,0.12)]
-        hover:-translate-y-0.5
-        transition
-        flex flex-col gap-4
-      "
-    >
+  const isExternal = to.startsWith("http");
+
+  const className = `
+    group rounded-[1.6rem]
+    border border-slate-200
+    bg-white/80 backdrop-blur-xl
+    p-6
+    shadow-[0_14px_35px_rgba(2,6,23,0.08)]
+    hover:shadow-[0_18px_50px_rgba(2,6,23,0.12)]
+    hover:-translate-y-0.5
+    transition
+    flex flex-col gap-4
+  `;
+
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white">
           {icon}
@@ -165,6 +176,26 @@ function ActionCard({
         <p className="text-lg font-extrabold tracking-tight">{title}</p>
         <p className="mt-1 text-sm text-slate-600 leading-relaxed">{desc}</p>
       </div>
+    </>
+  );
+
+  if (isExternal) {
+    return (
+      <a
+        href={to}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <NavLink to={to} className={className}>
+      {content}
     </NavLink>
   );
 }
+

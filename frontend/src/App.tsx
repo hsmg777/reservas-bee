@@ -15,6 +15,8 @@ import AdminEventosPage from "./pages/admin/AdminEventosPage";
 import AdminUsuariosPage from "./pages/admin/AdminUsuariosPage";
 
 import SecurityScanPage from "./pages/security/SecurityScanPage";
+import AdminAccesosPage from "./pages/admin/AdminAccesosPage";
+
 
 import RequireAdmin from "./routes/RequireAdmin";
 import RequireRole from "./routes/RequireRole";
@@ -45,7 +47,9 @@ export default function App() {
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/eventos" element={<AdminEventosPage />} />
           <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
-           <Route path="/admin/reservas" element={<AdminReservasPage />} /> 
+          <Route path="/admin/reservas" element={<AdminReservasPage />} /> 
+          <Route path="/admin/accesos" element={<AdminAccesosPage />} />
+
         </Route>
 
         {/* SEGURIDAD (admin también puede entrar) */}
